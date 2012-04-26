@@ -1,3 +1,5 @@
+package com.kd.chat;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,6 +9,14 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import com.kd.chat.messaging.ChatMessage;
+import com.kd.chat.messaging.ClientExchangeMessage;
+import com.kd.chat.messaging.MessageListener;
+import com.kd.chat.ui.ConsoleUI;
+import com.kd.chat.ui.UserInputListener;
+
+
 
 
 public class ChatClient extends Thread implements MessageListener, UserInputListener{
@@ -182,7 +192,7 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			}
 			catch(IOException ioe){
 				this.clients.remove(client);
-				clients.removeMessageListener(this);
+				client.removeMessageListener(this);
 				client.disconnect();
 				this.userInterface.clientDisconnected(client, ioe.getMessage());
 			}
@@ -241,7 +251,7 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			}
 
 			this.registerClient(newClient);
-			this.notifyClients(newClients);
+			this.notifyClients(newClient);
 			this.clients.add(newClient);
 
 			}
@@ -352,7 +362,7 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 				//Bind to the local listen port
 				this.listenSocket = new ServerSocket(this.listenPort);
 				//wait for 250ms at a time
-				this.listenSocket.setsoTimeout(250);
+				this.listenSocket.setSoTimeout(250);
 				}
 				catch(IOException e){
 					System.err.println(e.getMessage());
@@ -386,6 +396,25 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 				}
 				this.doShutdown();
 			}
+			
+			
+			/**
+			 * Disconnects all currently-connected clients, shuts down thread pools, and
+			 * exits the application.
+			 */
+			protected void doShutdown() {
+				// Close down connections to all clients.
+				for (Client client : this.clients) {
+					try {
+						client.sendDisconnectMessage();
+					} catch (IOException ioe) {
+						// Ignored for now, who cares if we're shutting down. :)
+					}
+					client.disconnect();
+				}
+				// Shut down the threadpool
+				this.workers.shutdown();
+			}
 
 			/*Sends the specified message to all currently-connected clients.
 			 * If any exception is thrown while sending the message, then that client
@@ -396,22 +425,29 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			 */
 
 			@Override
-			public void broadcastChatMessage(final String input){
-				this.workers.execute(new Runnable(){
-					public void run(){
-						for(Iterator<Client> clientIter = ChatClient.this.clients.
-							iterator(); clientIter.hasNext();){
+			public void broadcastChatMessage(final String input) {
+				this.workers.execute(new Runnable() {
+					public void run() {
+						for (Iterator<Client> clientIter = ChatClient.this.clients
+								.iterator(); clientIter.hasNext();) {
 							Client client = clientIter.next();
-							try{
+							try {
 								client.sendMessage(input);
-							}catch(IOException e){
+							} catch (IOException e) {
+								// Remove the client from the list of clients
 								clientIter.remove();
+								// Disconnect the client
 								client.disconnect();
-								ChatClient.this.userInterface.clientDisconnected(client,
-									"Failed to send broadcast chat message/" + e.getMessage());
+								// Notify the UI of the disconnect
+								ChatClient.this.userInterface.clientDisconnected(
+										client,
+										"Failed to send broadcast chat message/"
+												+ e.getMessage());
 							}
-							}
-						ChatClient.this.userInterface.chatMessageSent(System.currentTimeMillis(), input);
+						}
+						ChatClient.this.userInterface.chatMessageSent(System
+								.currentTimeMillis(), input);
+
 					}
 				});
 			}

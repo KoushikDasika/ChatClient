@@ -1,3 +1,5 @@
+package com.kd.chat;
+
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -6,6 +8,12 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import com.kd.chat.messaging.AbstractMessage;
+import com.kd.chat.messaging.ChatMessage;
+import com.kd.chat.messaging.ClientExchangeMessage;
+import com.kd.chat.messaging.HandshakeMessage;
+import com.kd.chat.messaging.MessageListener;
 
 
 
@@ -165,6 +173,11 @@ public class Client extends Thread{
 		ClientExchangeMessage cMessage = new ClientExchangeMessage(otherClient.getIpAddress(), otherClient.getPort(), otherClient.getUsername());
 		AbstractMessage.encodeMessage(cMessage, this.socket.getOutputStream());
 	}
+	
+	public synchronized void sendDisconnectMessage() throws IOException {
+		AbstractMessage.encodeMessage(AbstractMessage.DISCONNECT_MESSAGE,
+				this.socket.getOutputStream());
+	}
 
 	public synchronized void sendKeepAliveMessage() throws IOException{
 		AbstractMessage.encodeMessage(AbstractMessage.KEEPALIVE_MESSAGE,
@@ -229,7 +242,7 @@ public class Client extends Thread{
 	}
 
 	public Socket getSocket(){
-		return this.socket();
+		return this.socket;
 	}
 
 	public String getIpAddress(){

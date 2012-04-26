@@ -39,7 +39,7 @@ public class ChatMessage extends AbstractMessage{
 		StringBuffer sb = new StringBuffer();
 		sb.append(super.toString());
 		sb.append(' ').append(this.username).append('@').append(
-				new Date(this.timestamp)).append(": ").append*this.message);
+				new Date(this.timestamp)).append(": ").append(this.message);
 		return sb.toString();
 	}
 }

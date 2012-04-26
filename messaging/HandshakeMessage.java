@@ -1,5 +1,6 @@
 package com.kd.chat.messaging;
 
+
 import java.io.UnsupportedEncodingException;
 
 public class HandshakeMessage extends AbstractMessage{
@@ -19,7 +20,7 @@ public class HandshakeMessage extends AbstractMessage{
 		super(3+HandshakeMessage.PROTOCOL_STRING.getBytes("UTF-16BE").
 				length + username.getBytes("UTF-16BE").length,
 				AbstractMessage.TYPE_HANDSHAKE_MESSAGE);
-		this.ustername = username;
+		this.username = username;
 		this.listenPort = listenPort;
 	}
 

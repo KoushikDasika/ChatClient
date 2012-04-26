@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.SocketException;
 
+import com.kd.chat.messaging.AbstractMessage;
+
 
 public abstract class AbstractMessage{
 	public static final byte TYPE_CHAT_MESSAGE = 0;
@@ -49,8 +51,8 @@ public abstract class AbstractMessage{
 		return '(' + this.length + ")" + MESSAGE_NAMES[this.type];
 	}
 
-	public static final class DisconnectMessage extends AbstractMessage{
-		protected DisconnectedMessage(){
+	public static final class DisconnectMessage extends AbstractMessage {
+		protected DisconnectMessage() {
 			super(1, TYPE_DISCONNECT_MESSAGE);
 		}
 	}
@@ -66,7 +68,7 @@ public abstract class AbstractMessage{
 
 		DataOutputStream dout = new DataOutputStream(out);
 
-		dout.writeIntr(message.getLength());
+		dout.writeInt(message.getLength());
 		dout.writeByte(message.getType());
 
 		if(message.getLength() > 1){
@@ -85,7 +87,7 @@ public abstract class AbstractMessage{
 					dout.write(addx.getAddress());
 					dout.writeShort(client.getPort());
 					dout.write(client.getUsername().getBytes("UTF-16BE"));
-					break
+					break;
 
 				case AbstractMessage.TYPE_HANDSHAKE_MESSAGE:
 					HandshakeMessage handshake = (HandshakeMessage) message;
@@ -100,7 +102,7 @@ public abstract class AbstractMessage{
 			}
 		}
 
-		dout.flush;
+		dout.flush();
 	}
 
 
@@ -121,7 +123,7 @@ public abstract class AbstractMessage{
 				long timestamp = din.readLong();
 
 				int usernameLength = din.readInt();
-				byte[] usernameBytes - new byte[usernameLength];
+				byte[] usernameBytes = new byte[usernameLength];
 				din.readFully(usernameBytes);
 				String username = new String(usernameBytes, "UTF-16BE");
 
@@ -145,7 +147,7 @@ public abstract class AbstractMessage{
 				message = new ClientExchangeMessage(addx.getHostAddress(), port, uname);
 				break;
 			case AbstractMessage.TYPE_HANDSHAKE_MESSAGE:
-				byte[] pstrBytes = new byte[HandshakeMessage.PROTOCOL_STRING.getBytes("UTF-16BE");
+				byte[] pstrBytes = new byte[HandshakeMessage.PROTOCOL_STRING.getBytes("UTF-16BE").length];
 				din.readFully(pstrBytes);
 				String protocolString = new String(pstrBytes, "UTF-16BE");
 
