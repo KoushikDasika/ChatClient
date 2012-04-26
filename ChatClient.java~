@@ -1,3 +1,5 @@
+package com.kd.chat;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +10,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+import com.kd.chat.messaging.ChatMessage;
+import com.kd.chat.messaging.ClientExchangeMessage;
+import com.kd.chat.messaging.MessageListener;
+import com.kd.chat.ui.ConsoleUI;
+import com.kd.chat.ui.UIAdapter;
+import com.kd.chat.ui.UserInputListener;
 
 public class ChatClient extends Thread implements MessageListener, UserInputListener{
 
@@ -151,7 +160,6 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			this.registerClient(newClient);
 			this.clients.add(newClient);
 		}
-	}
 
 		/*Registers a new client with the local client. Notifies the UI.
 		 *
@@ -258,11 +266,7 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			for(Iterator<Client> clientIter = this.clients.iterator();
 				clientIter.hasNext();){
 					Client client = clientIter.next();
-					try {
-						// Exchange the client information
-						client.sendClient(newClient);
-					}
-					catch(IOException e){
+					try{
 						//Exchange the client information
 						clientIter.remove();
 						//stop listening to messages from the client
@@ -425,21 +429,20 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 			@Override
 			public void privateChatMessage(final Client client, final String message){
 				this.workers.execute(new Runnable(){
-					public void run(){
-						try{
-							client.sendMessage(message);
-						}
-						catch(IOException e){
-							ChatClient.this.clients.remove(client);
-							client.removeMessageListener(ChatClient.this);
-							client.disconnect();
-							ChatClient.this.userInterface.clientDisconnected(client,
-								"Failed to send private chat message/" +
-								e.getMessage());
-						}
+					try{
+						client.sendMessage(message);
 					}
-				});
-			}
+					catch(IOException e){
+						ChatClient.this.clients.remove(client);
+						client.removeMessageListener(ChatClient.this);
+						client.disconnect();
+						ChatClient.this.userInterface.clientDisconnected(client,
+							"Failed to send private chat message/" +
+							e.getMessage());
+					}
+				}
+			});
+	}
 
 	/*
 	 * Sets the run flag to false, which should occur within 250ms.
@@ -450,4 +453,3 @@ public class ChatClient extends Thread implements MessageListener, UserInputList
 	public void userRequestedShutdown(){
 		this.keepRunning = false;
 	}
-}

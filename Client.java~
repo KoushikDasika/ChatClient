@@ -1,3 +1,4 @@
+package com.kd.chat;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -7,7 +8,11 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-
+import com.kd.chat.messaging.AbstractMessage;
+import com.kd.chat.messaging.ChatMessage;
+import com.kd.chat.messaging.ClientExchangeMessage;
+import com.kd.chat.messaging.HandshakeMessage;
+import com.kd.chat.messaging.MessageListener;
 
 
 /*
